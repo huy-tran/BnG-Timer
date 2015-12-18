@@ -19,7 +19,7 @@ var App = React.createClass({
         this.setState({ running: true });
         this.interval = setInterval(function(){
             this.setState({ secondsElapsed: this.state.secondsElapsed - 1 });
-            document.title = "BnG Timer (" +  this.formattedTime(this.state.secondsElapsed) + ")";
+            document.title = "Pomodoro Timer (" +  this.formattedTime(this.state.secondsElapsed) + ")";
             if (this.state.secondsElapsed == 0) {
                 document.getElementById('bngAlarm').play();
                 clearInterval(this.interval);
