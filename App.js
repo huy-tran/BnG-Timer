@@ -13,9 +13,12 @@ class App extends React.Component{
         super();
         // Initial states
         this.state = {
+            startingTime: new Date(),
+            firstCount: true,
             running: false,
-            secondsElapsed: POMODORO_TIMESET,
-            chosenTime: POMODORO_TIMESET
+            stopTime: POMODORO_TIMESET,
+            remainingTime: POMODORO_TIMESET,
+            targetTime: POMODORO_TIMESET
         }
         this.setTimer = this.setTimer.bind(this);
         this.countdown = this.countdown.bind(this);
@@ -28,38 +31,58 @@ class App extends React.Component{
     }
     // Count down function
     countdown(){
-        this.setState({ secondsElapsed: this.state.secondsElapsed - 1 });
-        document.title = `Pomodoro Timer (${this.formattedTime(this.state.secondsElapsed)})`; // Update document title based on elapsed second
+        let currentTime = new Date(); // get current time
 
-        if (this.state.secondsElapsed !== 0) {
-            this.timeout = setTimeout(this.countdown, 1000);
+        this.state.startingTime = (this.state.firstCount) ? currentTime : this.state.startingTime; // Prevent delay or weird display when first countdown
+
+        let elapsedRealTime = Math.floor((currentTime.getTime() - this.state.startingTime.getTime()) / TIMER_INTEVAL);
+
+        this.setState({ remainingTime: this.state.stopTime - elapsedRealTime}); // update remainingTime
+
+        document.title = `Pomodoro Timer (${this.formattedTime(this.state.remainingTime)})`; // Update document title based on elapsed second
+
+        this.state.firstCount = false; // set flag to false
+
+        if (this.state.remainingTime !== 0) {
+            this.timeout = setTimeout(this.countdown, TIMER_INTEVAL);
         } else {
             document.getElementById('bngAlarm').play(); // Trigger alarm sound when finish countdown
             clearTimeout(this.timeout); 
             this.setState({ 
                 running: false,
-                secondsElapsed: this.state.chosenTime // Reset time to chosen time
+                remainingTime: this.state.targetTime // Reset time to target time
             });
         }
     }
     clickStart(){
-        this.setState({ running: true}); 
-        this.timeout = this.countdown();
+        this.setState({ running: true });
+        this.countdown();
     }
     clickStop(){
-        this.setState({ running: false });
+        this.setState({ 
+            running: false, 
+            firstCount: true, // set to true to get elapsedRealTime = 0, prevent gap when click Start button again
+            stopTime: this.state.remainingTime // set stopTime to last remainingTime to resume countdown
+        });
         clearTimeout(this.timeout);
     }
     clickReset(){
-        this.setState({ secondsElapsed: this.state.chosenTime });
+        this.setState({ 
+            remainingTime: this.state.targetTime, // Rest time to target time
+            stopTime: this.state.targetTime, // Set stopTime to use on countdown()
+            firstCount: true // set to true to get elapsedRealTime = 0, prevent gap when click Start button again 
+        });
     }
     setTimer(evt){
+        this.setState({ 
+            firstCount: true // set to true to get elapsedRealTime = 0, prevent gap when click Start button again
+        });
         let type = evt.target.getAttribute("name");
         switch(type){
-            case "Pomodoro": this.setState({ secondsElapsed: POMODORO_TIMESET, chosenTime: POMODORO_TIMESET }); break;
-            case "Short Break": this.setState({ secondsElapsed: SHORT_BREAK, chosenTime: SHORT_BREAK }); break;
-            case "Long Break": this.setState({ secondsElapsed: LONG_BREAK, chosenTime: LONG_BREAK }); break;
-            case "Test Alarm": this.setState({ secondsElapsed: TEST_ALARM, chosenTime: TEST_ALARM }); break;
+            case "Pomodoro": this.setState({ stopTime: POMODORO_TIMESET, remainingTime: POMODORO_TIMESET, targetTime: POMODORO_TIMESET }); break;
+            case "Short Break": this.setState({ stopTime: SHORT_BREAK, remainingTime: SHORT_BREAK, targetTime: SHORT_BREAK }); break;
+            case "Long Break": this.setState({ stopTime: LONG_BREAK, remainingTime: LONG_BREAK, targetTime: LONG_BREAK }); break;
+            case "Test Alarm": this.setState({ stopTime: TEST_ALARM, remainingTime: TEST_ALARM, targetTime: TEST_ALARM }); break;
         }
     }
     render(){
@@ -72,13 +95,13 @@ class App extends React.Component{
                 <div className="timer-mode">
                     {controlButtons}
                 </div>
-                <h2>{this.formattedTime(this.state.secondsElapsed)}</h2>
+                <h2>{this.formattedTime(this.state.remainingTime)}</h2>
                 <div className="timer-controller">
                     {!this.state.running
                         ? <Button name="Start" handleClick={this.clickStart.bind(this)} className="me-btn btn-start"/>
                         : <Button name="Stop" handleClick={this.clickStop.bind(this)} className="me-btn btn-stop"/>
                     }
-                    {!this.state.running && this.state.secondsElapsed !== this.state.chosenTime
+                    {!this.state.running && this.state.remainingTime !== this.state.targetTime
                         ? <Button name="Reset" handleClick={this.clickReset.bind(this)} className="me-btn btn-reset"/>
                         : null
                     }
@@ -86,7 +109,6 @@ class App extends React.Component{
             </div>
         );
     }
-    
 }
 
 ReactDOM.render(<App />, document.getElementById('bngTimer'));
