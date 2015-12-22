@@ -4,7 +4,7 @@ import Button from './Button';
 
 const POMODORO_TIMESET = 1500;
 const LONG_BREAK = 600
-const SHORT_BREAK = 300;
+const SHORT_BREAK = 10;
 const TIMER_INTEVAL = 1000;
 const TEST_ALARM = 3;
 
@@ -50,6 +50,8 @@ class App extends React.Component{
             clearTimeout(this.timeout); 
             this.setState({ 
                 running: false,
+                firstCount: true,
+                stopTime: this.state.targetTime,
                 remainingTime: this.state.targetTime // Reset time to target time
             });
         }
