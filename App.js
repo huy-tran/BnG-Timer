@@ -46,6 +46,7 @@ class App extends React.Component{
     if (this.state.remainingTime > 0) {
       this.timeout = setTimeout(this.countdown, TIMER_INTEVAL);
     } else {
+      document.title = `Pomodoro Timer (BINGO)`; // Reset document title
       document.getElementById('bngAlarm').play(); // Trigger alarm sound when finish countdown
       clearTimeout(this.timeout); 
       this.setState({ 
