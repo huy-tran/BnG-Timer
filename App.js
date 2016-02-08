@@ -2,11 +2,11 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import Button from './Button';
 
-const POMODORO_TIMESET = 1500;
+const POMODORO_DEFAULT = 1500;
 const LONG_BREAK = 600
 const SHORT_BREAK = 300;
 const TIMER_INTEVAL = 1000;
-const TEST_ALARM = 3;
+const TEST_ALARM = 5;
 
 class App extends React.Component{
   constructor(){
@@ -16,9 +16,9 @@ class App extends React.Component{
       startingTime: new Date(),
       firstCount: true,
       running: false,
-      stopTime: POMODORO_TIMESET,
-      remainingTime: POMODORO_TIMESET,
-      targetTime: POMODORO_TIMESET
+      stopTime: POMODORO_DEFAULT,
+      remainingTime: POMODORO_DEFAULT,
+      targetTime: POMODORO_DEFAULT
     }
     this.setTimer = this.setTimer.bind(this);
     this.countdown = this.countdown.bind(this);
@@ -83,35 +83,43 @@ class App extends React.Component{
     let type = evt.target.getAttribute("name");
     switch(type){
       case "Pomodoro": 
-        this.setState({ 
-          stopTime: POMODORO_TIMESET, 
-          remainingTime: POMODORO_TIMESET, 
-          targetTime: POMODORO_TIMESET 
-        }); 
+        this.setTimerState(POMODORO_DEFAULT);
         break;
       case "Short Break": 
-        this.setState({ 
-          stopTime: SHORT_BREAK, 
-          remainingTime: SHORT_BREAK, 
-          targetTime: SHORT_BREAK 
-        }); 
+        this.setTimerState(SHORT_BREAK); 
         break;
       case "Long Break": 
-        this.setState({ 
-          stopTime: LONG_BREAK, 
-          remainingTime: LONG_BREAK, 
-          targetTime: LONG_BREAK 
-        }); 
+        this.setTimerState(LONG_BREAK); 
         break;
       case "Test Alarm": 
-        this.setState({ 
-          stopTime: TEST_ALARM, 
-          remainingTime: TEST_ALARM, 
-          targetTime: TEST_ALARM 
-        }); 
+        this.setTimerState(TEST_ALARM);
         break;
-      }
     }
+  }
+  setLength(type) {
+    var targetTime = this.state.targetTime;
+  switch (type) {
+    case 'increase':
+      this.setTimerState(targetTime + 60);
+      break;
+    case 'decrease':
+      if (targetTime > 60) {
+        this.setTimerState(targetTime - 60);
+      } else if (targetTime <= 60 && targetTime > 0) {
+        this.setTimerState(targetTime - 5);
+      } else {
+        this.setTimerState(0);
+      }
+      break;
+    };
+  }
+  setTimerState(length) {
+    this.setState({ 
+      stopTime: length, 
+      remainingTime: length, 
+      targetTime: length 
+    }); 
+  }
   render(){
     let controlButtons = ['Pomodoro', 'Short Break', 'Long Break', 'Test Alarm'].map( (label, index) => {
       return <Button key={index} name={label} handleClick={this.setTimer} className="me-btn-alt"/>
@@ -121,7 +129,16 @@ class App extends React.Component{
         <div className="timer-mode">
           {controlButtons}
         </div>
-        <h2>{this.formattedTime(this.state.remainingTime)}</h2>
+        <div className="timer-display">
+          <h2>{this.formattedTime(this.state.remainingTime)}</h2>
+          {!this.state.running && this.state.remainingTime == this.state.targetTime
+            ? ( <div className="timer-setLength">
+              <button className="me-btn setLength-btn arrow-up" onClick={() => this.setLength('increase')}><i className="fa fa-arrow-up"></i></button>
+              <button className="me-btn setLength-btn arrow-down" onClick={() => this.setLength('decrease')}><i className="fa fa-arrow-down"></i></button>
+            </div> )
+            : null
+          }
+        </div>
         <div className="timer-controller">
           {!this.state.running
             ? <Button name="Start" handleClick={this.clickStart.bind(this)} className="me-btn btn-start"/>
